@@ -1,0 +1,9 @@
+Name: John Doe
+Email: john@doe.com
+Payment Method: card
+Date and Time: 20240709_155002
+Voucher Code: 47920F5
+Voucher Type: Amount
+Description: £20
+Amount Spent Before Voucher: £20.00
+Amount Spent After Voucher: £0.00

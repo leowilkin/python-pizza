@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+from operator import itemgetter
 
 # Constants
 INVENTORY_FILE = "inventory.txt"
@@ -14,8 +15,9 @@ def main():
     print("\nWelcome to PizzaParty POS. Please select your desired option.\n")
     print("1. Start a new order")
     print("2. Manage store inventory")
-    print("3. View recent orders")
+    print("3. Manage recent orders")
     print("4. Voucher & Discount Management")
+    print("5. Delivery Driver Orders")
     print("0. Exit\n")
     option = int(input("Enter your option > "))
     if option == 1:
@@ -23,9 +25,11 @@ def main():
     elif option == 2:
         inventory()
     elif option == 3:
-        orders()
+        view_recent_orders()
     elif option == 4:
         voucher()
+    elif option == 5:
+        delivery_driver_menu()
     elif option == 0:
         exit()
     else:
@@ -250,12 +254,8 @@ def search_orders(query):
         for order in found_orders:
             print(order)
 
-def mark_order_completed(order_filename):
-    order_filepath = os.path.join(RECEIPT_DIR, order_filename)
-    if not os.path.exists(order_filepath):
-        print("Order not found.")
-        return
-
+def mark_order_completed(filename):
+    order_filepath = os.path.join(RECEIPT_DIR, filename)
     with open(order_filepath, 'r') as file:
         lines = file.readlines()
 
@@ -266,7 +266,7 @@ def mark_order_completed(order_filename):
             else:
                 file.write(line)
     
-    print(f"Order {order_filename} marked as completed.")
+    print(f"Order {filename} marked as completed.")
 
 def view_pending_deliveries():
     print("\nView Pending and Delivery Orders:")
@@ -313,6 +313,133 @@ def update_order_status():
 
     mark_order_completed(order_filename)
 
+    main()
+
+def view_recent_orders():
+    print("\nRecent Orders:")
+    query = input("Enter search query (name, email, or date in YYYYMMDD format) or leave empty to see recent orders: ").strip()
+    receipts = get_recent_receipts(query if query else None)
+    
+    if not receipts:
+        print("No recent orders found.")
+        return
+    
+    print("Select a receipt to view details:")
+    for index, receipt in enumerate(receipts, start=1):
+        print(f"{index}. {receipt['filename']} ({receipt['date']})")
+    
+    try:
+        choice = int(input("Enter number of receipt to view (0 to go back): "))
+        if choice == 0:
+            return main()
+        
+        selected_receipt = receipts[choice - 1]
+        view_receipt(selected_receipt['filename'])
+    except (IndexError, ValueError):
+        print("Invalid choice. Please enter a valid number.")
+        time.sleep(3)
+        view_recent_orders()
+    
+    main()
+
+def get_recent_receipts(query=None):
+    receipts = []
+    if not os.path.exists(RECEIPT_DIR):
+        return receipts
+    
+    files = os.listdir(RECEIPT_DIR)
+    for file in files:
+        try:
+            if not file.startswith("receipt_") or not file.endswith(".txt"):
+                continue
+            
+            # Splitting filename into parts using "_" and "."
+            parts = file.split('_')
+            if len(parts) < 3 or len(parts[-1].split('.')) < 2:
+                continue  # Ensure there are enough parts and format ends with .txt
+            
+            # Extract the timestamp part from the filename
+            timestamp_str = parts[-2] + '_' + parts[-1].split('.')[0]
+            
+            # Parse timestamp into datetime object
+            timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+            
+            # If a search query is provided, filter by name, email, or date
+            if query:
+                with open(os.path.join(RECEIPT_DIR, file), 'r') as receipt_file:
+                    content = receipt_file.read().lower()
+                    if query.lower() in content or query.lower() in file.lower():
+                        receipts.append({'filename': file, 'date': timestamp})
+            else:
+                receipts.append({'filename': file, 'date': timestamp})
+        except (IndexError, ValueError):
+            continue
+    
+    receipts.sort(key=itemgetter('date'), reverse=True)
+    return receipts[:10]
+
+def view_receipt(filename):
+    filepath = os.path.join(RECEIPT_DIR, filename)
+    with open(filepath, 'r') as file:
+        content = file.read()
+        print("\nReceipt Details:")
+        print(content)
+    
+    while True:
+        print("\nOptions:")
+        print("1. Mark as Completed")
+        print("2. Void Order")
+        print("3. Back")
+        option = input("Choose an option: ")
+        
+        if option == '1':
+            mark_order_completed(filename)
+            break
+            main()
+        elif option == '2':
+            void_order(filename)
+            break
+            main()
+        elif option == '3':
+            view_recent_orders()
+            break
+            main()
+        else:
+            print("Invalid option. Please choose again.")
+            continue
+
+def void_order(filename):
+    order_filepath = os.path.join(RECEIPT_DIR, filename)
+    os.remove(order_filepath)
+    print(f"Order {filename} voided and removed.")
+
+def delivery_driver_menu():
+    while True:
+        print("\nDelivery Driver Menu:")
+        pending_orders = view_pending_deliveries()
+        
+        if not pending_orders:
+            print("No pending delivery orders.")
+            break
+            main()
+
+        print("\nSelect an order to mark as completed:")
+        for index, order in enumerate(pending_orders, start=1):
+            print(f"{index}. {order}")
+
+        try:
+            choice = int(input("Enter the number of the order to mark as completed (0 to go back): "))
+            if choice == 0:
+                main()
+                break
+
+            selected_order = pending_orders[choice - 1]
+            mark_order_completed(selected_order)
+            print(f"Order {selected_order} marked as completed.")
+        except (IndexError, ValueError):
+            print("Invalid choice. Please enter a valid number.")
+            time.sleep(3)
+            continue
 def orders():
     while True:
         print("\n1. View All Orders")

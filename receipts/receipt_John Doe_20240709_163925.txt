@@ -1,0 +1,16 @@
+Order Summary
+Name: John Doe
+Address: Test address
+Email: john@doe.com
+Delivery Type: delivery
+Delivery Speed: rush
+Payment Method: card
+
+Pizzas Ordered:
+  - Medium Italian Pizza: £8.99
+  - Large Pan Pizza: £13.99
+
+Delivery Charge: £3.99
+Total Price: £26.97
+
+Status: Pending
