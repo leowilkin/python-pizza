@@ -10,10 +10,11 @@ Python CLI Pizza inventory &amp; ordering system!
   - [ ] Voucher system
   - [X] Choose method of payment - cash/card/voucher
   - [ ] 'Print' receipt
-- [ ] Ability to check ingredients stock
-  - [ ] Add ingredient stock
+- [X] Ability to check ingredients stock
+  - [X] Add ingredient stock
 - [ ] Staff clock-in/clock-out
-- [ ] Check previous orders
+- [X] Check previous orders
+  - [X] Update status of completed orders
 
 ## Nice to haves
 - [ ] Staff sign-in
