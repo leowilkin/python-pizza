@@ -15,5 +15,9 @@ Python CLI Pizza inventory &amp; ordering system!
 - [ ] Staff clock-in/clock-out
 - [ ] Check previous orders
 
+## Nice to haves
+- [ ] Staff sign-in
+- [ ] Web interface
+
 ## License
 This work is under the MIT licence. Leo Wilkin 2024
