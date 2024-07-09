@@ -1,0 +1,17 @@
+Order Summary
+Name: John Doe
+Address: Test Address
+Email: john@doe.com
+Delivery Type: delivery
+Delivery Speed: standard
+Payment Method: card
+
+Pizzas Ordered:
+  - Medium Thin Pizza: £7.99
+  - Medium Pan Pizza: £9.99
+  - Medium Thin Pizza: £7.99
+
+Delivery Charge: £0.99
+Total Price: £26.96
+
+Status: Completed

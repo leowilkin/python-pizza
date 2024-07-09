@@ -1,0 +1,3 @@
+thin: 100
+italian: 100
+pan: 100

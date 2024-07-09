@@ -1,0 +1,17 @@
+Order Summary
+Name: Lucas Wilkin
+Address: 62 Queens Road
+Email: lucas.c.w@icloud.com
+Delivery Type: delivery
+Delivery Speed: rush
+Payment Method: cash
+
+Pizzas Ordered:
+  - Medium Thin Pizza: £7.99
+  - Large Thin Pizza: £10.99
+  - Large Thin Pizza: £10.99
+
+Delivery Charge: £3.99
+Total Price: £33.96
+
+Status: Completed
