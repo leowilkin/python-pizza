@@ -15,7 +15,7 @@ Python CLI Pizza inventory &amp; ordering system!
 - [ ] Staff clock-in/clock-out
 - [ ] Check previous orders
 
-## Nice to haves
+## Nice to haves
 - [ ] Staff sign-in
 - [ ] Web interface
 
