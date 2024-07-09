@@ -12,12 +12,10 @@ Python CLI Pizza inventory &amp; ordering system!
   - [ ] 'Print' receipt
 - [X] Ability to check ingredients stock
   - [X] Add ingredient stock
-- [ ] Staff clock-in/clock-out
 - [X] Check previous orders
   - [X] Update status of completed orders
 
 ## Nice to haves
-- [ ] Staff sign-in
 - [ ] Web interface
 
 ## License

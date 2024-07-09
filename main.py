@@ -4,26 +4,27 @@ from datetime import datetime
 
 # Constants
 INVENTORY_FILE = "inventory.txt"
+RECEIPT_DIR = "receipts"
 
 # Main menu
 def main():
     print("\nWelcome to PizzaParty POS. Please select your desired option.\n")
     print("1. Start a new order")
     print("2. Manage store inventory")
-    print("3. Clock in or clock out - WIP")
-    print("4. View recent orders")
-    print("5. Next page\n")
+    print("3. View recent orders")
+    print("4. Voucher & Discount Management")
+    print("0. Exit\n")
     option = int(input("Enter your option > "))
     if option == 1:
         new_order()
     elif option == 2:
         inventory()
     elif option == 3:
-        clock()
-    elif option == 4:
         orders()
-    elif option == 5:
-        main2()
+    elif option == 4:
+        voucher()
+    elif option == 0:
+        exit()
     else:
         print("Your input was not recognised")
         time.sleep(3)
@@ -48,10 +49,9 @@ def get_delivery_charge(delivery_option, speed):
     return charges[delivery_option][speed]
 
 def save_receipt(name, address, email, delivery_type, speed, payment_method, total_price, pizza_orders, delivery_charge):
-    receipt_dir = "receipts"
-    os.makedirs(receipt_dir, exist_ok=True)
+    os.makedirs(RECEIPT_DIR, exist_ok=True)
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{receipt_dir}/receipt_{name}_{current_time}.txt"
+    filename = f"{RECEIPT_DIR}/receipt_{name}_{current_time}.txt"
     
     with open(filename, 'w') as file:
         file.write("Order Summary\n")
@@ -105,9 +105,9 @@ def new_order():
             return new_order()
 
         print("\nSize:")
-        print("1. Small")
-        print("2. Medium")
-        print("3. Large")
+        print("1. Small (1)")
+        print("2. Medium (2)")
+        print("3. Large (3)")
         size_option = int(input("What size of pizza? > "))
         if size_option == 1:
             pizza_size = "small"
@@ -203,19 +203,18 @@ def new_order():
 
 # view order history & mark as delivered function
 def list_orders(status=None):
-    receipt_dir = "receipts"
-    if not os.path.exists(receipt_dir):
+    if not os.path.exists(RECEIPT_DIR):
         print("No orders found.")
         return
 
-    orders = os.listdir(receipt_dir)
+    orders = os.listdir(RECEIPT_DIR)
     if not orders:
         print("No orders found.")
         return
 
     for order in orders:
         if status:
-            with open(os.path.join(receipt_dir, order), 'r') as file:
+            with open(os.path.join(RECEIPT_DIR, order), 'r') as file:
                 lines = file.readlines()
                 order_status = [line for line in lines if line.startswith("Status:")][0].strip().split(": ")[1]
                 if order_status == status:
@@ -224,15 +223,14 @@ def list_orders(status=None):
             print(order)
 
 def search_orders(query):
-    receipt_dir = "receipts"
-    if not os.path.exists(receipt_dir):
+    if not os.path.exists(RECEIPT_DIR):
         print("No orders found.")
         return
 
-    orders = os.listdir(receipt_dir)
+    orders = os.listdir(RECEIPT_DIR)
     found_orders = []
     for order in orders:
-        with open(os.path.join(receipt_dir, order), 'r') as file:
+        with open(os.path.join(RECEIPT_DIR, order), 'r') as file:
             lines = file.readlines()
             if query.lower() in order.lower() or any(query.lower() in line.lower() for line in lines if line.startswith("Email:")):
                 found_orders.append(order)
@@ -244,8 +242,7 @@ def search_orders(query):
             print(order)
 
 def mark_order_completed(order_filename):
-    receipt_dir = "receipts"
-    order_filepath = os.path.join(receipt_dir, order_filename)
+    order_filepath = os.path.join(RECEIPT_DIR, order_filename)
     if not os.path.exists(order_filepath):
         print("Order not found.")
         return
@@ -262,12 +259,58 @@ def mark_order_completed(order_filename):
     
     print(f"Order {order_filename} marked as completed.")
 
+def view_pending_deliveries():
+    print("\nView Pending and Delivery Orders:")
+    if not os.path.exists(RECEIPT_DIR):
+        print("No orders found.")
+        return
+
+    orders = os.listdir(RECEIPT_DIR)
+    pending_orders = []
+    for order in orders:
+        with open(os.path.join(RECEIPT_DIR, order), 'r') as file:
+            lines = file.readlines()
+            order_status = [line for line in lines if line.startswith("Status:")][0].strip().split(": ")[1]
+            if order_status in ["Pending", "Delivery"]:
+                pending_orders.append(order)
+
+    if not pending_orders:
+        print("No pending or delivery orders found.")
+    else:
+        for order in pending_orders:
+            with open(os.path.join(RECEIPT_DIR, order), 'r') as file:
+                lines = file.readlines()
+                name = [line for line in lines if line.startswith("Name:")][0].strip().split(": ")[1]
+                address = [line for line in lines if line.startswith("Address:")][0].strip().split(": ")[1]
+                pizzas_ordered = sum(1 for line in lines if line.startswith("  -"))
+                print(f"Order: {order}")
+                print(f"Name: {name}")
+                print(f"Address: {address}")
+                print(f"Number of Pizzas: {pizzas_ordered}")
+                print()
+
+    return pending_orders
+
+def update_order_status():
+    pending_orders = view_pending_deliveries()
+    if not pending_orders:
+        return
+
+    print("\nUpdate Order Status to Completed:")
+    order_filename = input("Enter the order filename to mark as completed: > ")
+    if order_filename not in pending_orders:
+        print("Invalid order filename. Please try again.")
+        return update_order_status()
+
+    mark_order_completed(order_filename)
+
 def orders():
     while True:
         print("\n1. View All Orders")
         print("2. Search Orders")
         print("3. Mark Order as Completed")
-        print("4. Exit")
+        print("4. View Pending and Delivery Orders")
+        print("5. Exit")
         option = int(input("Choose an option: > "))
 
         if option == 1:
@@ -285,20 +328,20 @@ def orders():
                 elif sub_option == 3:
                     list_orders(status="Completed")
                 elif sub_option == 4:
-                    break
+                    orders()
                 else:
                     print("Invalid option. Please try again.")
         elif option == 2:
             query = input("Enter search query (name, date, or email): > ")
             search_orders(query)
         elif option == 3:
-            order_filename = input("Enter the order filename to mark as completed: > ")
-            mark_order_completed(order_filename)
+            update_order_status()
         elif option == 4:
-            break
+            view_pending_deliveries()
+        elif option == 5:
+            main()
         else:
             print("Invalid option. Please try again.")
-
 
 # add & view inventory 
 def inventory():
@@ -313,7 +356,7 @@ def inventory():
         elif option == 2:
             add_inventory()
         elif option == 3:
-            break
+            main()
         else:
             print("Invalid option. Please try again.")
 
@@ -365,10 +408,8 @@ def add_inventory():
     else:
         print("Quantity must be greater than zero. No changes made.")
 
-def clock():
-    pass
-
-def main2():
+# voucher & discount management system
+def voucher():
     pass
 
 main()
