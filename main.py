@@ -5,6 +5,9 @@ from datetime import datetime
 # Constants
 INVENTORY_FILE = "inventory.txt"
 RECEIPT_DIR = "receipts"
+VOUCHER_FILE = "vouchers.txt"
+DISCOUNT_FILE = "discounts.txt"
+VOUCHER_RECEIPT_DIR = "voucher-receipts"
 
 # Main menu
 def main():
@@ -136,8 +139,14 @@ def new_order():
         total_price += price
         pizza_orders.append((pizza_type, pizza_size, price))
 
-    if number_of_pizzas > 3:
+    # Apply automatic discount for more than 3 pizzas
+    if number_of_pizzas >= 3:
         total_price *= 0.67  # Apply 33% discount
+
+    # Check if a valid voucher is entered and apply
+    voucher_code = input("Enter voucher code (if any): ").strip().upper()
+    if voucher_code:
+        total_price = apply_voucher(total_price, voucher_code)
 
     print("------------------------------------------")
     print("------------ Delivery Options ------------")
@@ -410,6 +419,133 @@ def add_inventory():
 
 # voucher & discount management system
 def voucher():
-    pass
+    while True:
+        print("\nVoucher & Discount Management:")
+        print("1. Add New Voucher")
+        print("2. Remove Voucher")
+        print("3. View All Vouchers")
+        print("4. Back")
+        option = int(input("Choose an option: > "))
+
+        if option == 1:
+            code = generate_voucher_code()
+            amount = float(input("Enter amount or percentage off: "))
+            description = input("Enter description: ")
+            voucher_type = input("Enter voucher type (amount/percentage): ").lower()
+            add_voucher(code, amount, description, voucher_type)
+            print(f"New voucher added: {code} - {description}")
+            print(f"Amount/Percentage: {amount}, Type: {voucher_type.capitalize()}")
+            purchase_or_store = int(input("Is this a purchase(1) or a store addition(2) > "))
+            if purchase_or_store == 1:
+                name = input("Enter your name: > ")
+                email = input("Enter your email: > ")
+                payment_method = input("Enter your payment method (card/cash): > ")
+
+                # Apply voucher and get the discounted amount
+                total_spent_before_voucher = float(input("Enter the total amount before applying voucher: "))
+                total_spent_after_voucher = apply_voucher(total_spent_before_voucher, code)
+
+                # Ensure voucher-receipts directory exists
+                os.makedirs(VOUCHER_RECEIPT_DIR, exist_ok=True)
+
+                # Save voucher receipt with date and time
+                current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                with open(f"{VOUCHER_RECEIPT_DIR}/voucher_receipt_{name}_{current_time}.txt", 'w') as f:
+                    f.write(f"Name: {name}\n")
+                    f.write(f"Email: {email}\n")
+                    f.write(f"Payment Method: {payment_method}\n")
+                    f.write(f"Date and Time: {current_time}\n")
+                    f.write(f"Voucher Code: {code}\n")
+                    f.write(f"Voucher Type: {voucher_type.capitalize()}\n")
+                    f.write(f"Description: {description}\n")
+                    f.write(f"Amount Spent Before Voucher: £{total_spent_before_voucher:.2f}\n")
+                    f.write(f"Amount Spent After Voucher: £{total_spent_after_voucher:.2f}\n")
+
+                print(f"Voucher purchase receipt saved in {VOUCHER_RECEIPT_DIR}")
+            else:
+                print(f"The voucher code {code} was added to {VOUCHER_FILE}")
+                print("Added to store addition")
+        elif option == 2:
+            code = input("Enter voucher code to remove: ").strip().upper()
+            remove_voucher(code)
+            print(f"Voucher {code} removed from {VOUCHER_FILE}")
+        elif option == 3:
+            vouchers = load_vouchers()
+            if not vouchers:
+                print("No vouchers found.")
+            else:
+                print("\nAll Vouchers:")
+                for voucher in vouchers:
+                    print(f"Code: {voucher['code']}, Amount/Percentage: {voucher['amount']}, Description: {voucher['description']}, Type: {voucher['type'].capitalize()}")
+        elif option == 4:
+            main()
+        else:
+            print("Invalid option. Please try again.")
+                        
+def generate_voucher_code():
+    import uuid
+    return str(uuid.uuid4()).upper()[:7]  # Generate a unique 7-character voucher code
+
+def add_voucher(code, amount, description, voucher_type):
+    with open(VOUCHER_FILE, 'a') as file:
+        file.write(f"{code}:{amount}:{description}:{voucher_type}\n")
+
+def remove_voucher(code):
+    with open(VOUCHER_FILE, 'r+') as file:
+        lines = file.readlines()
+        file.seek(0)
+        for line in lines:
+            if not line.startswith(code):
+                file.write(line)
+        file.truncate()
+
+def apply_voucher(order_total, voucher_code):
+    vouchers = load_vouchers()
+    for voucher in vouchers:
+        if voucher['code'] == voucher_code:
+            if voucher['type'] == 'amount':
+                discount = min(voucher['amount'], order_total)
+                voucher['amount'] -= discount
+                if voucher['amount'] <= 0:
+                    remove_voucher(voucher['code'])  # Remove the voucher if completely spent
+                else:
+                    save_vouchers(vouchers)
+                return order_total - discount
+            elif voucher['type'] == 'percentage':
+                discount = min(order_total * voucher['amount'] / 100, voucher['amount'])
+                voucher['amount'] -= discount
+                if voucher['amount'] <= 0:
+                    remove_voucher(voucher['code'])  # Remove the voucher if completely spent
+                else:
+                    save_vouchers(vouchers)
+                return order_total - discount
+    return order_total
+
+def load_vouchers():
+    vouchers = []
+    if os.path.exists(VOUCHER_FILE):
+        with open(VOUCHER_FILE, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                line = line.strip()
+                if line:  # Check if line is not empty
+                    try:
+                        code, amount, description, voucher_type = line.split(':')
+                        voucher = {
+                            'code': code,
+                            'amount': float(amount),
+                            'description': description,
+                            'type': voucher_type
+                        }
+                        vouchers.append(voucher)
+                    except ValueError:
+                        print(f"Issue reading line: {line}")  # Print the line for debugging
+                        continue
+    return vouchers
+
+def save_vouchers(vouchers):
+    with open(VOUCHER_FILE, 'w') as file:
+        for voucher in vouchers:
+            file.write(f"{voucher['code']}:{voucher['amount']}:{voucher['description']}\n")
 
 main()
