@@ -1,0 +1,16 @@
+Order Summary
+Name: John Doe
+Address: john@doe.com
+Email: john@doe.com
+Delivery Type: delivery
+Delivery Speed: standard
+Payment Method: card
+
+Pizzas Ordered:
+  - Small Thin Pizza: £4.99
+  - Small Thin Pizza: £4.99
+
+Delivery Charge: £0.99
+Total Price: £10.97
+
+Status: Pending

@@ -18,7 +18,10 @@ def main():
     print("3. Manage recent orders")
     print("4. Voucher & Discount Management")
     print("5. Delivery Driver Orders")
+    print("6. Help")
     print("0. Exit\n")
+
+    # menu selection
     option = int(input("Enter your option > "))
     if option == 1:
         new_order()
@@ -30,6 +33,8 @@ def main():
         voucher()
     elif option == 5:
         delivery_driver_menu()
+    elif option == 6:
+        help()
     elif option == 0:
         exit()
     else:
@@ -40,6 +45,8 @@ def main():
 ## Functions
 
 # new order function
+
+# get pizza pricing
 def get_pizza_price(pizza_type, size):
     pricing = {
         "thin": {"small": 4.99, "medium": 7.99, "large": 10.99},
@@ -48,6 +55,7 @@ def get_pizza_price(pizza_type, size):
     }
     return pricing[pizza_type][size]
 
+# get delivery charges
 def get_delivery_charge(delivery_option, speed):
     charges = {
         "delivery": {"rush": 3.99, "standard": 0.99},
@@ -55,6 +63,7 @@ def get_delivery_charge(delivery_option, speed):
     }
     return charges[delivery_option][speed]
 
+# save receipt
 def save_receipt(name, address, email, delivery_type, speed, payment_method, total_price, pizza_orders, delivery_charge):
     os.makedirs(RECEIPT_DIR, exist_ok=True)
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -77,6 +86,7 @@ def save_receipt(name, address, email, delivery_type, speed, payment_method, tot
     
     print(f"Receipt saved as {filename}")
 
+# code for making a new order flow
 def new_order():
     print("\nStarting a new order...")
     number_of_pizzas = int(input("How many pizzas are you ordering? > "))
