@@ -66,7 +66,7 @@ def get_delivery_charge(delivery_option, speed):
 # save receipt
 def save_receipt(name, address, email, delivery_type, speed, payment_method, total_price, pizza_orders, delivery_charge):
     os.makedirs(RECEIPT_DIR, exist_ok=True)
-    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    current_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     filename = f"{RECEIPT_DIR}/receipt_{name}_{current_time}.txt"
     
     with open(filename, 'w') as file:
@@ -372,7 +372,7 @@ def get_recent_receipts(query=None):
             timestamp_str = parts[-2] + '_' + parts[-1].split('.')[0]
             
             # Parse timestamp into datetime object
-            timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+            timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H:%M:%S")
             
             # If a search query is provided, filter by name, email, or date
             if query:
@@ -565,6 +565,26 @@ def voucher():
         option = int(input("Choose an option: > "))
 
         if option == 1:
+            add_new_voucher()
+        elif option == 2:
+            code = input("Enter voucher code to remove: ").strip().upper()
+            remove_voucher(code)
+            print(f"Voucher {code} removed from {VOUCHER_FILE}")
+        elif option == 3:
+            vouchers = load_vouchers()
+            if not vouchers:
+                print("No vouchers found.")
+                voucher()
+            else:
+                print("\nAll Vouchers:")
+                for voucher in vouchers:
+                    print(f"Code: {voucher['code']}, Amount/Percentage: {voucher['amount']}, Description: {voucher['description']}, Type: {voucher['type'].capitalize()}")
+        elif option == 4:
+            main()
+        else:
+            print("Invalid option. Please try again.")
+
+def add_new_voucher():
             code = generate_voucher_code()
             amount = float(input("Enter amount or percentage off: "))
             description = input("Enter description: ")
@@ -586,7 +606,7 @@ def voucher():
                 os.makedirs(VOUCHER_RECEIPT_DIR, exist_ok=True)
 
                 # Save voucher receipt with date and time
-                current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+                current_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
                 with open(f"{VOUCHER_RECEIPT_DIR}/voucher_receipt_{name}_{current_time}.txt", 'w') as f:
                     f.write(f"Name: {name}\n")
                     f.write(f"Email: {email}\n")
@@ -602,30 +622,14 @@ def voucher():
             else:
                 print(f"The voucher code {code} was added to {VOUCHER_FILE}")
                 print("Added to store addition")
-        elif option == 2:
-            code = input("Enter voucher code to remove: ").strip().upper()
-            remove_voucher(code)
-            print(f"Voucher {code} removed from {VOUCHER_FILE}")
-        elif option == 3:
-            vouchers = load_vouchers()
-            if not vouchers:
-                print("No vouchers found.")
-            else:
-                print("\nAll Vouchers:")
-                for voucher in vouchers:
-                    print(f"Code: {voucher['code']}, Amount/Percentage: {voucher['amount']}, Description: {voucher['description']}, Type: {voucher['type'].capitalize()}")
-        elif option == 4:
-            main()
-        else:
-            print("Invalid option. Please try again.")
-                        
+                       
 def generate_voucher_code():
     import uuid
     return str(uuid.uuid4()).upper()[:7]  # Generate a unique 7-character voucher code
 
-def add_voucher(code, amount, description, voucher_type):
-    with open(VOUCHER_FILE, 'a') as file:
-        file.write(f"{code}:{amount}:{description}:{voucher_type}\n")
+# def add_voucher(code, amount, description, voucher_type):
+#    with open(VOUCHER_FILE, 'a') as file:
+#        file.write(f"{code}:{amount}:{description}:{voucher_type}\n")
 
 def remove_voucher(code):
     with open(VOUCHER_FILE, 'r+') as file:
@@ -636,6 +640,7 @@ def remove_voucher(code):
                 file.write(line)
         file.truncate()
 
+# code for applying a voucher to an order
 def apply_voucher(order_total, voucher_code):
     vouchers = load_vouchers()
     for voucher in vouchers:
