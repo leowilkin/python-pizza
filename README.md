@@ -19,10 +19,6 @@ If you haven't got Python installed, simply run the executable in the [Releases 
   - [X] Add ingredient stock
 - [X] Check previous orders
   - [X] Update status of completed orders
-     
-## Contributing
-All contributions are very welcome! Feel free to make a PR, and be descriptive in what you've added/changed!
-
 
 ## License
 This work is under the MIT licence. Leo Wilkin 2024
